@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, MessageSquare, Send, Paperclip, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,10 +27,19 @@ interface Comment {
   profiles: { name: string } | null;
 }
 
+interface Attachment {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  created_at: string;
+}
+
 const AdminComplaintDetail = () => {
   const { id } = useParams();
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -41,6 +50,7 @@ const AdminComplaintDetail = () => {
   useEffect(() => {
     fetchComplaint();
     fetchComments();
+    fetchAttachments();
   }, [id]);
 
   const fetchComplaint = async () => {
@@ -99,6 +109,42 @@ const AdminComplaintDetail = () => {
     }));
 
     setComments(enrichedComments);
+  };
+
+  const fetchAttachments = async () => {
+    const { data } = await supabase
+      .from("complaint_attachments")
+      .select("*")
+      .eq("complaint_id", id)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      setAttachments(data);
+    }
+  };
+
+  const downloadAttachment = async (filePath: string, fileName: string) => {
+    const { data, error } = await supabase.storage
+      .from("complaint-attachments")
+      .download(filePath);
+
+    if (error) {
+      toast({
+        title: "Error downloading file",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleStatusUpdate = async () => {
@@ -241,6 +287,44 @@ const AdminComplaintDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {attachments.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Attachments ({attachments.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {attachments.map((attachment) => (
+                  <div
+                    key={attachment.id}
+                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{attachment.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(attachment.file_size / 1024).toFixed(1)} KB • {new Date(attachment.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => downloadAttachment(attachment.file_path, attachment.file_name)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
