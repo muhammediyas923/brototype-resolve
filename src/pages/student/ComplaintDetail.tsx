@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, MessageSquare, Paperclip, Download } from "lucide-react";
+import { ArrowLeft, MessageSquare, Paperclip, Download, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 
 interface Complaint {
@@ -128,6 +129,27 @@ const ComplaintDetail = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleDelete = async () => {
+    const { error } = await supabase
+      .from("complaints")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error deleting complaint",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Complaint deleted",
+        description: "Your complaint has been deleted successfully",
+      });
+      navigate("/student/dashboard");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -169,7 +191,30 @@ const ComplaintDetail = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap">{complaint.description}</p>
+            <p className="whitespace-pre-wrap mb-6">{complaint.description}</p>
+            
+            <Separator className="my-6" />
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Complaint
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete your complaint and all associated comments and attachments. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 
