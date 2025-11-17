@@ -17,6 +17,7 @@ interface Complaint {
   description: string;
   status: "pending" | "in_review" | "resolved";
   created_at: string;
+  student_id: string;
   categories: { name: string } | null;
   profiles: { name: string; email: string; batch: string | null } | null;
 }
@@ -269,7 +270,15 @@ const AdminComplaintDetail = () => {
             <CardTitle className="text-2xl">{complaint.title}</CardTitle>
             <div className="grid gap-2 text-sm text-muted-foreground">
               <div className="flex gap-4">
-                <span>Student: {complaint.profiles?.name || "Unknown"}</span>
+                <span>
+                  Student:{" "}
+                  <button
+                    onClick={() => navigate(`/admin/student/${complaint.student_id}`)}
+                    className="text-primary hover:underline"
+                  >
+                    {complaint.profiles?.name || "Unknown"}
+                  </button>
+                </span>
                 <span>Email: {complaint.profiles?.email || "N/A"}</span>
                 {complaint.profiles?.batch && <span>Batch: {complaint.profiles.batch}</span>}
               </div>
