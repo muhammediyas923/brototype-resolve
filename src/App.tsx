@@ -12,6 +12,7 @@ import SubmitComplaint from "./pages/student/SubmitComplaint";
 import StudentComplaintDetail from "./pages/student/ComplaintDetail";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminComplaintDetail from "./pages/admin/ComplaintDetail";
+import StudentDetail from "./pages/admin/StudentDetail";
 import Categories from "./pages/admin/Categories";
 import NotFound from "./pages/NotFound";
 
@@ -68,6 +69,14 @@ const App = () => (
             element={
               <ProtectedRoute requireAdmin>
                 <AdminComplaintDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/student/:id"
+            element={
+              <ProtectedRoute requireAdmin>
+                <StudentDetail />
               </ProtectedRoute>
             }
           />

@@ -14,6 +14,7 @@ interface Complaint {
   description: string;
   status: "pending" | "in_review" | "resolved";
   created_at: string;
+  student_id: string;
   categories: { name: string } | null;
   profiles: { name: string; batch: string | null } | null;
 }
@@ -262,8 +263,17 @@ const AdminDashboard = () => {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <div className="flex gap-4">
                         <span>
-                          Student: {complaint.profiles?.name || "Unknown"}
-                          {complaint.profiles?.batch && ` (${complaint.profiles.batch})`}
+                          Student:{" "}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/admin/student/${complaint.student_id}`);
+                            }}
+                            className="text-primary hover:underline"
+                          >
+                            {complaint.profiles?.name || "Unknown"}
+                            {complaint.profiles?.batch && ` (${complaint.profiles.batch})`}
+                          </button>
                         </span>
                         <span>{complaint.categories?.name || "Uncategorized"}</span>
                       </div>
